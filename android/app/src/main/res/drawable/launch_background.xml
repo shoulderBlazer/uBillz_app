@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modify this file to customize your launch splash screen -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_background" />
+
+    <!-- uBillz logo centered on screen - using drawable reference to avoid icon styling -->
+    <item 
+        android:width="120dp"
+        android:height="120dp"
+        android:drawable="@drawable/ubillz_logo_512x512_white"
+        android:gravity="center" />
+</layer-list>

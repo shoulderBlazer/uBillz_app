@@ -1,0 +1,136 @@
+{
+  "@@locale": "fr",
+  "enableBiometricLoginTitle": "Activer la connexion biométrique ?",
+  "enableBiometricLoginContent": "Utilisez vos données biométriques pour une connexion plus rapide et plus sécurisée.",
+  "biometricsEnabledSuccess": "Biométrie activée avec succès !",
+  "biometricsEnableError": "Impossible d'activer la biométrie. Veuillez réessayer.",
+  "biometricErrorNotEnrolled": "Aucune donnée biométrique enregistrée. Veuillez configurer la biométrie dans les paramètres de votre appareil.",
+  "biometricErrorLockedOut": "L'authentification biométrique est temporairement verrouillée en raison de trop de tentatives infructueuses.",
+  "biometricErrorPermanentlyLockedOut": "L'authentification biométrique est verrouillée en permanence. Veuillez utiliser votre code PIN et réactiver la biométrie dans les paramètres.",
+  "biometricErrorNotAvailable": "La biométrie n'est pas disponible sur cet appareil.",
+  "biometricErrorPasscodeNotSet": "Aucun code d'accès n'est défini. Veuillez définir un code d'accès sur votre appareil pour utiliser la biométrie.",
+  "biometricErrorAuthFailed": "L'authentification biométrique a échoué. Veuillez réessayer.",
+  "pinInvalidLengthError": "Veuillez entrer un code PIN à 4 chiffres",
+  "pinInvalidError": "PIN invalide. Veuillez réessayer.",
+  "authenticationError": "Erreur lors de l'authentification : {error}",
+  "@authenticationError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeBack": "Bon retour !",
+  "helloUser": "Bonjour, {userName} !",
+  "@helloUser": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinOrBiometricsPrompt": "Entrez le PIN ou utilisez la biométrie",
+  "pinPrompt": "Entrez votre PIN",
+  "biometricAuthTooltip": "Utiliser l'authentification biométrique",
+  "login": "Connexion",
+  "enableBiometrics": "Activer la biométrie",
+  "goodMorning": "Bonjour",
+  "goodAfternoon": "Bon après-midi",
+  "goodEvening": "Bonsoir",
+  "currencySettings": "Paramètres de devise",
+  "languageSettings": "Paramètres de langue",
+  "yourPayments": "Vos paiements : {total}",
+  "@yourPayments": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentsDueToday": "Vous avez {count} paiement(s) dû(s) aujourd'hui pour un total de {total}",
+  "@paymentsDueToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "noPaymentsDueToday": "Vous n'avez aucun paiement dû aujourd'hui",
+  "thisMonthsPayments": "Paiement(s) de ce mois-ci :",
+  "upcomingPayments": "Paiements à venir",
+  "upcomingPaymentsList": "Une liste de vos paiements à venir :",
+  "noUpcomingPayments": "Aucun paiement à venir",
+  "addPayment": "Ajouter un paiement",
+  "viewAllPayments": "Voir tous les paiements",
+  "allPayments": "Tous les paiements",
+  "noPaymentsMessage": "Vous n'avez aucun paiement",
+  "addPaymentPrompt": "Ajoutez un nouveau paiement depuis le tableau de bord.",
+  "settings": "Paramètres",
+  "logout": "Déconnexion",
+  "currencyUpdated": "Devise mise à jour vers {currencyCode}",
+  "@currencyUpdated": {
+    "placeholders": {
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeTo": "Bienvenue sur uBillz !",
+  "setupSecureAccess": "Configurez votre accès sécurisé",
+  "yourName": "Votre nom",
+  "errorEnterName": "Veuillez entrer votre nom",
+  "createPin": "Créer un code PIN à 4 chiffres",
+  "errorPinLength": "Le code PIN doit contenir exactement 4 chiffres",
+  "errorPinNumeric": "Le code PIN ne doit contenir que des chiffres",
+  "confirmPin": "Confirmer le code PIN",
+  "errorPinMatch": "Les codes PIN ne correspondent pas",
+  "setupAuth": "Configurer l'authentification",
+  "dataStoredLocally": "Vos données sont stockées en toute sécurité sur votre appareil uniquement",
+  "setupAuthFailed": "Échec de la configuration de l'authentification. Veuillez réessayer.",
+  "setupError": "Erreur de configuration : {error}",
+  "@setupError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biometricAuthEnabled": "Authentification biométrique activée ! Vous pouvez l'utiliser lors de la prochaine connexion.",
+  "addPaymentTitle": "Ajouter un paiement",
+  "addPaymentHeader": "Ajoutez un nouveau paiement à votre liste.",
+  "dayOfMonth": "Jour du mois",
+  "amount": "Montant",
+  "description": "Description",
+  "errorEnterDay": "Veuillez entrer un jour",
+  "errorInvalidDay": "Veuillez entrer un jour entre 1 et 31",
+  "errorEnterAmount": "Veuillez entrer un montant",
+  "errorInvalidAmount": "Veuillez entrer un montant valide",
+  "errorEnterDescription": "Veuillez entrer une description",
+  "paymentAddedSuccess": "Paiement ajouté avec succès !",
+  "paymentAddedError": "Échec de l'ajout du paiement. Veuillez réessayer.",
+  "paid": "Payé",
+  "unpaid": "Impayé",
+  "english": "Anglais",
+  "french": "Français",
+  "spanish": "Espagnol",
+  "mandarinChinese": "Chinois (Mandarin)",
+  "hindi": "Hindi",
+  "arabic": "Arabe",
+  "german": "Allemand",
+  "portuguese": "Portugais",
+  "russian": "Russe",
+  "japanese": "Japonais",
+  "payday": "Jour de budget",
+  "day": "Jour",
+  "usernameSettings": "Paramètres du nom d'utilisateur",
+  "updateYourUsername": "Mettre à jour votre nom d'utilisateur",
+  "usernameDescription": "Modifiez le nom qui apparaît dans votre message d'accueil du tableau de bord.",
+  "updateUsername": "Mettre à jour le nom d'utilisateur",
+  "usernameUpdatedSuccess": "Nom d'utilisateur mis à jour avec succès !",
+  "usernameUpdateError": "Échec de la mise à jour du nom d'utilisateur. Veuillez réessayer.",
+  "nextPayday": "Mon jour de budget est le jour {day}",
+  "paydayDay": "Jour de budget : Jour {day}"
+}

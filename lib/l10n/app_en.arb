@@ -1,0 +1,150 @@
+{
+  "@@locale": "en",
+  "enableBiometricLoginTitle": "Enable Biometric Login?",
+  "enableBiometricLoginContent": "Use your biometrics for faster, more secure login.",
+  "biometricsEnabledSuccess": "Biometrics enabled successfully!",
+  "biometricsEnableError": "Could not enable biometrics. Please try again.",
+  "biometricErrorNotEnrolled": "No biometrics enrolled. Please set up biometrics in your device settings.",
+  "biometricErrorLockedOut": "Biometric authentication is temporarily locked due to too many failed attempts.",
+  "biometricErrorPermanentlyLockedOut": "Biometric authentication is permanently locked. Please use your PIN and re-enable biometrics in settings.",
+  "biometricErrorNotAvailable": "Biometrics are not available on this device.",
+  "biometricErrorPasscodeNotSet": "No passcode is set. Please set a passcode on your device to use biometrics.",
+  "biometricErrorAuthFailed": "Biometric authentication failed. Please try again.",
+  "pinInvalidLengthError": "Please enter a 4-digit PIN",
+  "pinInvalidError": "Invalid PIN. Please try again.",
+  "authenticationError": "Error during authentication: {error}",
+  "@authenticationError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeBack": "Welcome Back!",
+  "helloUser": "Hello, {userName}!",
+  "@helloUser": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinOrBiometricsPrompt": "Enter PIN or use biometrics",
+  "pinPrompt": "Enter your PIN",
+  "biometricAuthTooltip": "Use biometric authentication",
+  "login": "Login",
+  "enableBiometrics": "Enable Biometrics",
+  "goodMorning": "Good Morning",
+  "goodAfternoon": "Good Afternoon",
+  "goodEvening": "Good evening",
+  "currencySettings": "Currency Settings",
+  "languageSettings": "Language Settings",
+  "payday": "Budget Day",
+  "day": "Day",
+  "yourPayments": "Your Payments: {total}",
+  "@yourPayments": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentsDueToday": "You have {count} payment(s) due today of {total}",
+  "@paymentsDueToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "noPaymentsDueToday": "You have no payments due today",
+  "thisMonthsPayments": "This month's payment(s):",
+  "upcomingPayments": "Upcoming Payments",
+  "upcomingPaymentsList": "A list of your upcoming payments:",
+  "noUpcomingPayments": "No upcoming payments",
+  "addPayment": "Add Payment",
+  "viewAllPayments": "View All Payments",
+  "allPayments": "All Payments",
+  "noPaymentsMessage": "You have no payments",
+  "addPaymentPrompt": "Add a new payment from the dashboard.",
+  "settings": "Settings",
+  "logout": "Logout",
+  "currencyUpdated": "Currency updated to {currencyCode}",
+  "@currencyUpdated": {
+    "placeholders": {
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeTo": "Welcome to uBillz!",
+  "setupSecureAccess": "Set up your secure access",
+  "yourName": "Your Name",
+  "errorEnterName": "Please enter your name",
+  "createPin": "Create 4-digit PIN",
+  "errorPinLength": "PIN must be exactly 4 digits",
+  "errorPinNumeric": "PIN must contain only numbers",
+  "confirmPin": "Confirm PIN",
+  "errorPinMatch": "PINs do not match",
+  "setupAuth": "Setup Authentication",
+  "dataStoredLocally": "Your data is stored securely on your device only",
+  "setupAuthFailed": "Failed to setup authentication. Please try again.",
+  "setupError": "Setup error: {error}",
+  "@setupError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biometricAuthEnabled": "Biometric authentication enabled! You can use it on the next login.",
+  "addPaymentTitle": "Add Payment",
+  "addPaymentHeader": "Add a new payment to your list.",
+  "dayOfMonth": "Day of Month",
+  "amount": "Amount",
+  "description": "Description",
+  "errorEnterDay": "Please enter a day",
+  "errorInvalidDay": "Please enter a day between 1 and 31",
+  "errorEnterAmount": "Please enter an amount",
+  "errorInvalidAmount": "Please enter a valid amount",
+  "errorEnterDescription": "Please enter a description",
+  "paymentAddedSuccess": "Payment added successfully!",
+  "paymentAddedError": "Failed to add payment. Please try again.",
+  "paid": "Paid",
+  "unpaid": "Unpaid",
+  "english": "English",
+  "french": "French",
+  "spanish": "Spanish",
+  "mandarinChinese": "Mandarin Chinese",
+  "hindi": "Hindi",
+  "arabic": "Arabic",
+  "german": "German",
+  "portuguese": "Portuguese",
+  "russian": "Russian",
+  "japanese": "Japanese",
+  "usernameSettings": "Username Settings",
+  "updateYourUsername": "Update Your Username",
+  "usernameDescription": "Change the name that appears in your dashboard greeting.",
+  "updateUsername": "Update Username",
+  "usernameUpdatedSuccess": "Username updated successfully!",
+  "usernameUpdateError": "Failed to update username. Please try again.",
+  "nextPayday": "My Budget Day is Day {day}",
+  "@nextPayday": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "paydayDay": "Budget Day: Day {day}",
+  "@paydayDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  }
+}
