@@ -2,8 +2,9 @@ class Payment {
   final int? id;
   final String description;
   final double amount;
-  final int day; // Day of the month (1-31)
+  final int day;
   final bool isPaid;
+  final bool isDueToday;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -13,12 +14,13 @@ class Payment {
     required this.amount,
     required this.day,
     this.isPaid = false,
+    this.isDueToday = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
-  // Convert Payment to Map for database storage
+  // Convert a Payment into a Map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -26,31 +28,38 @@ class Payment {
       'amount': amount,
       'day': day,
       'isPaid': isPaid ? 1 : 0,
+      'isDueToday': isDueToday ? 1 : 0,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
-  // Create Payment from Map (database retrieval)
+  // Create a Payment from a Map
   factory Payment.fromMap(Map<String, dynamic> map) {
     return Payment(
-      id: map['id']?.toInt(),
-      description: map['description'] ?? '',
-      amount: map['amount']?.toDouble() ?? 0.0,
-      day: map['day']?.toInt() ?? 1,
+      id: map['id'] as int?,
+      description: map['description'] as String? ?? '',
+      amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      day: (map['day'] as num?)?.toInt() ?? 1,
       isPaid: map['isPaid'] == 1,
-      createdAt: DateTime.parse(map['createdAt']),
-      updatedAt: DateTime.parse(map['updatedAt']),
+      isDueToday: map['isDueToday'] == 1,
+      createdAt: map['createdAt'] != null 
+          ? DateTime.parse(map['createdAt'] as String) 
+          : DateTime.now(),
+      updatedAt: map['updatedAt'] != null 
+          ? DateTime.parse(map['updatedAt'] as String) 
+          : DateTime.now(),
     );
   }
 
-  // Create a copy of Payment with updated fields
+  // Create a copy of the Payment with updated fields
   Payment copyWith({
     int? id,
     String? description,
     double? amount,
     int? day,
     bool? isPaid,
+    bool? isDueToday,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -60,14 +69,15 @@ class Payment {
       amount: amount ?? this.amount,
       day: day ?? this.day,
       isPaid: isPaid ?? this.isPaid,
+      isDueToday: isDueToday ?? this.isDueToday,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? DateTime.now(),
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   @override
   String toString() {
-    return 'Payment{id: $id, description: $description, amount: $amount, day: $day, isPaid: $isPaid}';
+    return 'Payment{id: $id, description: $description, amount: $amount, day: $day, isPaid: $isPaid, isDueToday: $isDueToday}';
   }
 
   @override
@@ -78,7 +88,8 @@ class Payment {
         other.description == description &&
         other.amount == amount &&
         other.day == day &&
-        other.isPaid == isPaid;
+        other.isPaid == isPaid &&
+        other.isDueToday == isDueToday;
   }
 
   @override
@@ -87,6 +98,7 @@ class Payment {
         description.hashCode ^
         amount.hashCode ^
         day.hashCode ^
-        isPaid.hashCode;
+        isPaid.hashCode ^
+        isDueToday.hashCode;
   }
 }

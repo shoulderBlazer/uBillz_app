@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../providers/budget_day_provider.dart';
-
 import '../models/payment.dart';
 import '../providers/currency_provider.dart';
 import '../providers/payment_provider.dart';
@@ -18,7 +17,7 @@ class PaymentListTile extends StatefulWidget {
   final bool showArrow;
   final VoidCallback? onTap;
 
-    const PaymentListTile({
+  const PaymentListTile({
     super.key,
     required this.payment,
     this.isSlidable = false,
@@ -85,17 +84,16 @@ class _PaymentListTileState extends State<PaymentListTile>
   }
 
   Future<void> _deletePayment(BuildContext context) async {
-    // Capture the provider and scaffold messenger before showing dialog
     final paymentProvider = Provider.of<PaymentProvider>(context, listen: false);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         final sizer = ResponsiveSizer(dialogContext);
         return AlertDialog(
-          title: Text('Delete Payment', style: TextStyle(fontSize: sizer.sp(18), fontWeight: FontWeight.bold)),
-          content: Text('Are you sure you want to delete "${widget.payment.description}"?', style: TextStyle(fontSize: sizer.sp(16))),
+          title: Text('Delete Payment', 
+              style: TextStyle(fontSize: sizer.sp(18), fontWeight: FontWeight.bold)),
+          content: Text('Are you sure you want to delete "${widget.payment.description}"?', 
+              style: TextStyle(fontSize: sizer.sp(16))),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -103,8 +101,8 @@ class _PaymentListTileState extends State<PaymentListTile>
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-              child: Text('Delete', style: TextStyle(fontSize: sizer.sp(16))),
+              child: Text('Delete', 
+                  style: TextStyle(color: Colors.red, fontSize: sizer.sp(16))),
             ),
           ],
         );
@@ -112,30 +110,10 @@ class _PaymentListTileState extends State<PaymentListTile>
     );
 
     if (confirmed == true) {
-      try {
-        final success = await paymentProvider.deletePayment(widget.payment.id!);
-
-        if (success) {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text('Payment deleted successfully!'),
-              backgroundColor: AppTheme.primaryTeal,
-            ),
-          );
-        } else {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text('Failed to delete payment'),
-              backgroundColor: AppTheme.error,
-            ),
-          );
-        }
-      } catch (e) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text('Error deleting payment: $e'),
-            backgroundColor: AppTheme.error,
-          ),
+      await paymentProvider.deletePayment(widget.payment.id!);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment deleted')),
         );
       }
     }
@@ -143,15 +121,22 @@ class _PaymentListTileState extends State<PaymentListTile>
 
   Color _getStatusColor(Payment payment) {
     if (payment.isPaid) {
-      return AppTheme.success; // Green
+      return Colors.green;
+    } else if (payment.day == DateTime.now().day) {
+      return Colors.orange;
+    } else {
+      return Colors.red;
     }
-    
-    final currentDay = DateTime.now().day;
-    if (payment.day == currentDay) {
-      return AppTheme.warning; // Yellow for unpaid and due today
+  }
+
+  String _getStatusText(Payment payment) {
+    if (payment.isPaid) {
+      return 'Paid';
+    } else if (payment.day == DateTime.now().day) {
+      return 'Due Today';
+    } else {
+      return 'Unpaid';
     }
-    
-    return AppTheme.error; // Red for unpaid and not due today
   }
 
   @override
@@ -160,158 +145,168 @@ class _PaymentListTileState extends State<PaymentListTile>
     final currencyProvider = Provider.of<CurrencyProvider>(context);
     final budgetDayProvider = Provider.of<BudgetDayProvider>(context);
     final isBudgetDay = widget.payment.day == budgetDayProvider.budgetDay;
+    final statusColor = _getStatusColor(widget.payment);
+    final statusText = _getStatusText(widget.payment);
 
-    final tileContent = AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Opacity(
-            opacity: _opacityAnimation.value,
-            child: Container(
-              color: Colors.white.withOpacity(0.15),
-              padding: EdgeInsets.symmetric(vertical: sizer.height(12), horizontal: sizer.width(16)),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: sizer.sp(55),
-                    height: sizer.sp(55),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: isBudgetDay
-                          ? Border.all(color: AppTheme.accent, width: 3)
-                          : null,
-                    ),
-                    child: Container(
+    final tileContent = GestureDetector(
+      onTapDown: _handleTapDown,
+      onTapUp: (_) => _handleTapUp(_),
+      onTapCancel: _handleTapCancel,
+      onTap: _handleTap,
+      child: AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Opacity(
+              opacity: _opacityAnimation.value,
+              child: Container(
+                color: Colors.white.withOpacity(0.15),
+                padding: EdgeInsets.symmetric(
+                    vertical: sizer.height(12), horizontal: sizer.width(16)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Day circle
+                    Container(
+                      width: sizer.sp(55),
+                      height: sizer.sp(55),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(widget.payment),
                         shape: BoxShape.circle,
+                        border: isBudgetDay
+                            ? Border.all(color: AppTheme.accent, width: 3)
+                            : null,
                       ),
-                      child: Center(
-                        child: Text(
-                          widget.payment.day.toString().padLeft(2, '0'),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: sizer.sp(24),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            widget.payment.day.toString().padLeft(2, '0'),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: sizer.sp(24),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: sizer.width(16)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.payment.description,
-                          style: TextStyle(fontWeight: FontWeight.normal, fontSize: sizer.sp(16), color: Colors.white),
-                        ),
-                        SizedBox(height: sizer.height(4)),
-                        Text(
-                          currencyProvider.format(widget.payment.amount),
-                          style: TextStyle(
-                            fontSize: sizer.sp(18),
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                    SizedBox(width: sizer.width(16)),
+                    // Payment info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.payment.description,
+                            style: TextStyle(
+                              fontWeight: FontWeight.normal,
+                              fontSize: sizer.sp(16),
+                              color: Colors.white,
+                              decoration: widget.payment.isPaid 
+                                  ? TextDecoration.lineThrough 
+                                  : null,
+                              decorationColor: Colors.white,
+                              decorationThickness: 2.0,
+                            ),
                           ),
-                        ),
-                      ],
+                          SizedBox(height: sizer.height(4)),
+                          Row(
+                            children: [
+                              Text(
+                                currencyProvider.format(widget.payment.amount),
+                                style: TextStyle(
+                                  fontSize: sizer.sp(18),
+                                  fontWeight: FontWeight.bold,
+                                  color: widget.payment.isPaid 
+                                      ? Colors.grey.shade400 
+                                      : Colors.white,
+                                  decoration: widget.payment.isPaid 
+                                      ? TextDecoration.lineThrough 
+                                      : null,
+                                ),
+                              ),
+                              SizedBox(width: sizer.width(8)),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: sizer.width(8),
+                                  vertical: sizer.height(2),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: statusColor.withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  statusText,
+                                  style: TextStyle(
+                                    color: statusColor,
+                                    fontSize: sizer.sp(12),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  if (widget.isSlidable)
-                    SizedBox(width: sizer.width(8)),
-                  if (widget.isSlidable && widget.showArrow)
-                    Icon(Icons.chevron_left_rounded, color: Colors.white.withOpacity(0.5), size: sizer.sp(28)),
-                ],
+                    if (widget.isSlidable)
+                      SizedBox(width: sizer.width(8)),
+                    if (widget.isSlidable && widget.showArrow)
+                      Icon(Icons.chevron_left_rounded,
+                          color: Colors.white.withOpacity(0.5),
+                          size: sizer.sp(28)),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
 
     if (!widget.isSlidable) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: sizer.height(6), horizontal: sizer.width(8)),
-        child: GestureDetector(
-          onTapDown: _handleTapDown,
-          onTapUp: _handleTapUp,
-          onTapCancel: _handleTapCancel,
-          onTap: _handleTap,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(sizer.sp(12)),
-            child: tileContent,
-          ),
-        ),
-      );
+      return tileContent;
     }
 
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: sizer.height(6), horizontal: sizer.width(8)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Slidable(
-          key: ValueKey(widget.payment.id),
-          startActionPane: ActionPane(
-            motion: const StretchMotion(),
-            children: [
-              Builder(
-                builder: (context) {
-                  final isEffectivelyPaid = widget.payment.isPaid;
-                  return SlidableAction(
-                    onPressed: (context) {
-                      Provider.of<PaymentProvider>(context, listen: false).togglePaymentStatus(widget.payment);
-                    },
-                    backgroundColor: isEffectivelyPaid ? AppTheme.error : AppTheme.success,
-                    foregroundColor: Colors.white,
-                    icon: isEffectivelyPaid ? Icons.close_rounded : Icons.check_rounded,
-                    label: isEffectivelyPaid ? 'Unpaid' : 'Paid',
-                  );
-                },
-              ),
-            ],
-          ),
-          endActionPane: widget.showEditDeleteActions
-              ? ActionPane(
-                  motion: const StretchMotion(),
-                  children: [
-                    SlidableAction(
-                      onPressed: (context) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => EditPaymentScreen(payment: widget.payment),
-                          ),
-                        );
-                      },
-                      backgroundColor: AppTheme.primaryTeal,
-                      foregroundColor: Colors.white,
-                      icon: Icons.edit_rounded,
-                      label: 'Edit',
-                    ),
-                    SlidableAction(
-                      onPressed: (context) => _deletePayment(context),
-                      backgroundColor: AppTheme.error,
-                      foregroundColor: Colors.white,
-                      icon: Icons.delete_rounded,
-                      label: 'Delete',
-                    ),
-                  ],
-                )
-              : null,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: _handleTapDown,
-            onTapUp: _handleTapUp,
-            onTapCancel: _handleTapCancel,
-            onTap: _handleTap,
-            child: tileContent,
-          ),
-        ),
-      ),
+    return Slidable(
+      endActionPane: widget.showEditDeleteActions
+          ? ActionPane(
+              motion: const ScrollMotion(),
+              children: [
+                SlidableAction(
+                  onPressed: (context) => _showEditDialog(context),
+                  backgroundColor: AppTheme.accent,
+                  foregroundColor: Colors.white,
+                  icon: Icons.edit,
+                  label: 'Edit',
+                ),
+                SlidableAction(
+                  onPressed: (context) => _deletePayment(context),
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  icon: Icons.delete,
+                  label: 'Delete',
+                ),
+              ],
+            )
+          : null,
+      child: tileContent,
+    );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => EditPaymentScreen(payment: widget.payment),
     );
   }
 }
