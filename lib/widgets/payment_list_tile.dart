@@ -123,7 +123,7 @@ class _PaymentListTileState extends State<PaymentListTile>
     if (payment.isPaid) {
       return Colors.green;
     } else if (payment.day == DateTime.now().day) {
-      return Colors.orange;
+      return Colors.yellow;
     } else {
       return Colors.red;
     }
@@ -247,7 +247,7 @@ class _PaymentListTileState extends State<PaymentListTile>
                                 child: Text(
                                   statusText,
                                   style: TextStyle(
-                                    color: statusColor,
+                                    color: statusColor == Colors.yellow ? Colors.black : Colors.white,
                                     fontSize: sizer.sp(12),
                                     fontWeight: FontWeight.w600,
                                   ),
