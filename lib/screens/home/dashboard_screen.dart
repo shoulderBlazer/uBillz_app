@@ -44,14 +44,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return [];
     }
 
-    final firstPaymentDay = upcomingPayments.first.day;
-    final paymentsOnFirstDay = upcomingPayments.where((p) => p.day == firstPaymentDay).toList();
+    final now = DateTime.now();
+    final currentDay = now.day;
 
-    if (paymentsOnFirstDay.length > 5) {
-      return paymentsOnFirstDay;
-    } else {
-      return upcomingPayments.take(5).toList();
+    // Separate paid and unpaid payments
+    final unpaid = upcomingPayments.where((p) => !p.isPaid).toList();
+    final paid = upcomingPayments.where((p) => p.isPaid).toList();
+
+    // Sort both lists by day, handling month boundaries
+    int getSortValue(Payment p) => p.day < currentDay ? p.day + 31 : p.day;
+    
+    unpaid.sort((a, b) => getSortValue(a).compareTo(getSortValue(b)));
+    paid.sort((a, b) => getSortValue(a).compareTo(getSortValue(b)));
+    
+    // Combine unpaid first, then paid
+    final allPayments = [...unpaid, ...paid];
+    
+    // If we have any day with more than 5 payments, show all payments for that day
+    final dayCounts = <int, int>{};
+    for (final p in allPayments) {
+      dayCounts[p.day] = (dayCounts[p.day] ?? 0) + 1;
     }
+    
+    final hasDayWithManyPayments = dayCounts.values.any((count) => count > 5);
+    if (hasDayWithManyPayments) {
+      // Find the first day with more than 5 payments
+      final dayWithManyPayments = dayCounts.entries
+          .firstWhere((e) => e.value > 5)
+          .key;
+      
+      // Return all payments for that day
+      return allPayments
+          .where((p) => p.day == dayWithManyPayments)
+          .toList();
+    }
+    
+    // Otherwise return up to 5 payments
+    return allPayments.take(5).toList();
   }
 
   @override

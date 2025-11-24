@@ -278,6 +278,21 @@ class _PaymentListTileState extends State<PaymentListTile>
     }
 
     return Slidable(
+      // Left side swipe action (for mark paid/unpaid)
+      startActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: _handleStatusToggle,
+            backgroundColor: widget.payment.isPaid ? Colors.orange : Colors.green,
+            foregroundColor: Colors.white,
+            icon: widget.payment.isPaid ? Icons.close : Icons.check,
+            label: widget.payment.isPaid ? 'Unpaid' : 'Paid',
+            autoClose: true,
+          ),
+        ],
+      ),
+      // Right side swipe actions (edit/delete)
       endActionPane: widget.showEditDeleteActions
           ? ActionPane(
               motion: const ScrollMotion(),
@@ -308,5 +323,23 @@ class _PaymentListTileState extends State<PaymentListTile>
       context: context,
       builder: (context) => EditPaymentScreen(payment: widget.payment),
     );
+  }
+
+  void _handleStatusToggle(BuildContext context) async {
+    final paymentProvider = Provider.of<PaymentProvider>(context, listen: false);
+    await paymentProvider.togglePaymentStatus(widget.payment);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${widget.payment.description} marked as ${!widget.payment.isPaid ? 'paid' : 'unpaid'}',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: !widget.payment.isPaid ? Colors.green : Colors.orange,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 }

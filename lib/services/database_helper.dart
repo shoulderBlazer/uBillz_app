@@ -68,29 +68,35 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> insertPayment(Payment payment) async {
-    final db = await database;
-    final now = DateTime.now();
-    final currentDay = now.day;
-    
-    // Mark as paid if:
-    // 1. It's before or on the current day (1st-22nd), or
-    // 2. It's on or after the budget day (25th-31st)
-    final isPaid = (payment.day <= currentDay) || (payment.day >= _budgetDay);
-    
-    final newPayment = payment.copyWith(
-      isPaid: isPaid,
-      isDueToday: payment.day == currentDay,
-      createdAt: now,
-      updatedAt: now,
-    );
-
-    if (kIsWeb) {
-      return await _insertPaymentWeb(newPayment);
-    } else {
-      return await db.insert('payments', newPayment.toMap());
-    }
+Future<int> insertPayment(Payment payment) async {
+  final db = await database;
+  final now = DateTime.now();
+  final currentDay = now.day;
+  final isDueToday = payment.day == currentDay;
+  
+  // Determine if payment should be marked as paid
+  bool isPaid;
+  if (isDueToday) {
+    // If it's due today, it should be unpaid
+    isPaid = false;
+  } else {
+    // Otherwise, follow the normal payment cycle logic
+    isPaid = payment.day < currentDay;
   }
+
+  final newPayment = payment.copyWith(
+    isPaid: isPaid,
+    isDueToday: isDueToday,
+    createdAt: now,
+    updatedAt: now,
+  );
+
+  if (kIsWeb) {
+    return await _insertPaymentWeb(newPayment);
+  } else {
+    return await db.insert('payments', newPayment.toMap());
+  }
+}
 
   Future<int> _insertPaymentWeb(Payment payment) async {
     final payments = await _getAllPaymentsFromPrefs();
@@ -117,29 +123,50 @@ class DatabaseHelper {
     }
   }
 
-Future<List<Payment>> getUpcomingPayments({required int budgetDay}) async {
-  final allPayments = await getAllPayments();
-  final currentDay = DateTime.now().day;
+  Future<List<Payment>> getUpcomingPayments({required int budgetDay}) async {
+    final allPayments = await getAllPayments();
+    final now = DateTime.now();
+    final currentDay = now.day;
   
-  return allPayments.where((p) {
-    // If we're after the budget day, show payments from next cycle
-    if (currentDay > budgetDay) {
-      return p.day > budgetDay || p.day <= currentDay;
-    } 
-    // If we're on or before budget day, show payments from current day to budget day
-    else {
-      return p.day >= currentDay && p.day <= budgetDay;
+    // First, separate paid and unpaid payments
+    final List<Payment> unpaidPayments = [];
+    final List<Payment> paidPayments = [];
+  
+    for (final payment in allPayments) {
+      if (payment.isPaid) {
+        paidPayments.add(payment);
+      } else {
+        unpaidPayments.add(payment);
+      }
     }
-  }).toList();
-}
+  
+    // Sort unpaid payments by day (starting from current day)
+    unpaidPayments.sort((a, b) {
+      // Calculate days until next occurrence for each payment
+      final aDay = a.day < currentDay ? a.day + 31 : a.day;
+      final bDay = b.day < currentDay ? b.day + 31 : b.day;
+      return aDay.compareTo(bDay);
+    });
+  
+    // Sort paid payments by day (starting from current day)
+    paidPayments.sort((a, b) {
+      // Calculate days until next occurrence for each payment
+      final aDay = a.day < currentDay ? a.day + 31 : a.day;
+      final bDay = b.day < currentDay ? b.day + 31 : b.day;
+      return aDay.compareTo(bDay);
+    });
+  
+    // Combine unpaid first, then paid
+    return [...unpaidPayments, ...paidPayments];
+  }
 
-Future<double> getTotalPayments({required int budgetDay}) async {
-  final payments = await getUpcomingPayments(budgetDay: budgetDay);
-  return payments.cast<Payment>().fold<double>(
-    0.0,
-    (sum, p) => sum + (p.amount ?? 0.0),
-  );
-}
+  Future<double> getTotalPayments({required int budgetDay}) async {
+    final payments = await getUpcomingPayments(budgetDay: budgetDay);
+    return payments.fold<double>(
+      0.0,
+      (sum, p) => sum + (p.amount ?? 0.0),
+    );
+  }
 
   Future<int> updatePayment(Payment payment) async {
     final now = DateTime.now();
@@ -194,24 +221,24 @@ Future<void> resetPaymentsForNewCycle(int budgetDay) async {
     final payments = maps.map((map) => Payment.fromMap(map)).toList();
     final now = DateTime.now();
     final currentDay = now.day;
-    final currentMonth = now.month;
-    final currentYear = now.year;
 
     final batch = db.batch();
 
     for (var payment in payments) {
       bool isPaid;
-      bool isDueToday;
+      bool isDueToday = payment.day == currentDay;
       
+      // If it's due today, it should be unpaid
+      if (isDueToday) {
+        isPaid = false;
+      }
       // If current day is after budget day, we're in a new budget cycle
-      if (currentDay > budgetDay) {
-        // Payments after budget day are in the next cycle and should be unpaid
+      else if (currentDay > budgetDay) {
         isPaid = payment.day <= budgetDay; // Keep paid status for previous cycle
-        isDueToday = payment.day == currentDay;
-      } else {
-        // Current day is on or before budget day
+      } 
+      // Current day is on or before budget day
+      else {
         isPaid = payment.day < currentDay; // Only mark as paid if before today
-        isDueToday = payment.day == currentDay;
       }
 
       batch.update(
