@@ -69,6 +69,9 @@ if (success) {
                     backgroundColor: AppTheme.primaryTeal,
                   ),
                 );
+                // Navigate to dashboard immediately after enabling biometrics
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const DashboardScreen()));
+                return; // Exit the method to prevent further execution
               }
             }
           }

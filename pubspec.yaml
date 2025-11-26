@@ -57,12 +57,10 @@ flutter_launcher_icons:
     generate: false
 
 flutter_native_splash:
-    color: "#0097A7"
-    image: assets/images/ubillz_logo_512x512_white.png
-    color_dark: "#000000"
-    image_dark: assets/images/ubillz_logo_512x512_white.png
-    ios: true
-    android: true
+  color: "#0097A7"
+  color_dark: "#000000"
+  android: true
+  ios: true
 
 flutter:
   generate: true
