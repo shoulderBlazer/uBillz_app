@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:ubillz/generated/app_localizations.dart';
 
 import '../../providers/auth_provider.dart';
+import '../auth/login_screen.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/budget_day_provider.dart';
 import '../../models/payment.dart';
@@ -109,7 +110,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     if (value == 'logout') {
                       await Provider.of<AuthProvider>(context, listen: false).logout();
                       if (!context.mounted) return;
-                      Navigator.of(context).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                        (Route<dynamic> route) => false,
+                      );
                     } else {
                       Navigator.pushNamed(context, value);
                     }

@@ -35,15 +35,20 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    // Always check biometrics availability first
     await _checkBiometricsAvailability();
 
     if (authProvider.justLoggedOut) {
-      authProvider.resetJustLoggedOut();
-      FocusScope.of(context).requestFocus(_pinFocusNode);
+      await authProvider.resetJustLoggedOut();
+      if (mounted) {
+        FocusScope.of(context).requestFocus(_pinFocusNode);
+      }
       return;
     }
 
-    if (_showBiometrics) {
+    // Only attempt biometric auth if it's available and enabled
+    if (_showBiometrics && mounted) {
       await _authenticateWithBiometrics();
     }
   }
@@ -76,11 +81,29 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _authenticateWithBiometrics() async {
     if (_isLoading) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // 🚫 BLOCK BIOMETRICS IF AUTH WAS NEVER SET UP
+    if (!authProvider.hasSetupAuth) {
+      debugPrint("🚫 Biometrics blocked: Auth was not set up.");
+      _showError(AppLocalizations.of(context)!.biometricNoAuthError);
+      setState(() {
+        _showBiometrics = false;
+        _biometricsAvailableButNotEnabled = false;
+      });
+      return;
+    }
+
     if (authProvider.isBiometricAuthInProgress) return;
+
     try {
-      setState(() => _isLoading = true);
+      if (mounted) {
+        setState(() => _isLoading = true);
+      }
+      
       final authenticated = await authProvider.authenticateWithBiometrics();
+      
       if (!mounted) return;
+      
       if (authenticated) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -89,22 +112,23 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _showBiometrics = true;
           _isLoading = false;
-          FocusScope.of(context).requestFocus(_pinFocusNode);
         });
+        FocusScope.of(context).requestFocus(_pinFocusNode);
       }
     } on PlatformException catch (e) {
+      debugPrint('🔐 Biometric PlatformException: ${e.code} - ${e.message}');
       if (mounted) {
+        setState(() => _isLoading = false);
         _showError(authProvider.getBiometricErrorMessage(e, AppLocalizations.of(context)!));
         FocusScope.of(context).requestFocus(_pinFocusNode);
       }
-    } catch (e) {
-      if (mounted) {
-        _showError(AppLocalizations.of(context)!.authenticationError(e.toString()));
-        FocusScope.of(context).requestFocus(_pinFocusNode);
-      }
-    } finally {
+    } catch (e, stackTrace) {
+      debugPrint('🔐 Biometric error: $e');
+      debugPrint('🔐 Stack trace: $stackTrace');
       if (mounted) {
         setState(() => _isLoading = false);
+        _showError(AppLocalizations.of(context)!.authenticationError(e.toString()));
+        FocusScope.of(context).requestFocus(_pinFocusNode);
       }
     }
   }

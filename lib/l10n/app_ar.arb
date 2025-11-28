@@ -10,6 +10,7 @@
   "biometricErrorNotAvailable": "البصمات غير متوفرة على هذا الجهاز.",
   "biometricErrorPasscodeNotSet": "لم يتم تعيين رمز مرور. يرجى تعيين رمز مرور على جهازك لاستخدام البصمات.",
   "biometricErrorAuthFailed": "فشلت المصادقة بالبصمة. يرجى المحاولة مرة أخرى.",
+  "biometricNoAuthError": "يرجى إعداد رمز PIN الخاص بك أولاً قبل استخدام البصمة.",
   "pinInvalidLengthError": "الرجاء إدخال رمز PIN مكون من 4 أرقام",
   "pinInvalidError": "رمز PIN غير صالح. يرجى المحاولة مرة أخرى.",
   "authenticationError": "خطأ أثناء المصادقة: {error}",

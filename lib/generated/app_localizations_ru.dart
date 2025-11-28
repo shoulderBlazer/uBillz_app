@@ -47,6 +47,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Биометрическая аутентификация не удалась. Пожалуйста, попробуйте еще раз.';
 
   @override
+  String get biometricNoAuthError =>
+      'Пожалуйста, сначала настройте PIN-код, прежде чем использовать биометрию.';
+
+  @override
   String get pinInvalidLengthError => 'Пожалуйста, введите 4-значный PIN-код';
 
   @override

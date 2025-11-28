@@ -174,6 +174,12 @@ abstract class AppLocalizations {
   /// **'Biometric authentication failed. Please try again.'**
   String get biometricErrorAuthFailed;
 
+  /// No description provided for @biometricNoAuthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please set up your PIN first before using biometrics.'**
+  String get biometricNoAuthError;
+
   /// No description provided for @pinInvalidLengthError.
   ///
   /// In en, this message translates to:

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart' as sql;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'dart:developer' as developer;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/payment.dart';
@@ -25,18 +27,75 @@ class DatabaseHelper {
   }
 
   Future<sql.Database> _initDatabase() async {
-    if (kIsWeb) {
-      _prefs = await SharedPreferences.getInstance();
-      return await _createInMemoryDatabase();
-    } else {
-      final documentsDirectory = await getApplicationDocumentsDirectory();
-      final path = join(documentsDirectory.path, 'ubillz.db');
-      return await sql.openDatabase(
-        path,
-        version: 2,
-        onCreate: _onCreate,
-        onUpgrade: _onUpgrade,
-      );
+    try {
+      developer.log('Initializing database...');
+      
+      if (kIsWeb) {
+        _prefs = await SharedPreferences.getInstance();
+        return await _createInMemoryDatabase();
+      } else {
+        // Initialize FFI for non-web platforms
+        sqfliteFfiInit();
+        
+        // Get the application documents directory
+        final documentsDirectory = await getApplicationDocumentsDirectory();
+        final dbPath = join(documentsDirectory.path, 'ubillz.db');
+        
+        developer.log('Database path: $dbPath');
+        
+        // Check if the directory exists, if not create it
+        final directory = Directory(dirname(dbPath));
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        
+        // Check if we can write to the directory
+        try {
+          final testFile = File('${dbPath}_test');
+          await testFile.writeAsString('test');
+          await testFile.delete();
+        } catch (e) {
+          developer.log('Error writing to database directory: $e');
+          rethrow;
+        }
+        
+        // Open the database with error handling
+        try {
+          final database = await sql.openDatabase(
+            dbPath,
+            version: 2,
+            onCreate: _onCreate,
+            onUpgrade: _onUpgrade,
+            onOpen: (db) {
+              developer.log('Database opened successfully');
+            },
+          );
+          
+          // Enable foreign key constraints
+          await database.execute('PRAGMA foreign_keys = ON');
+          
+          return database;
+        } catch (e) {
+          developer.log('Error opening database: $e');
+          // Try to delete and recreate the database if it's corrupted
+          try {
+            await sql.deleteDatabase(dbPath);
+            developer.log('Deleted corrupted database, attempting to recreate...');
+            return await sql.openDatabase(
+              dbPath,
+              version: 2,
+              onCreate: _onCreate,
+              onUpgrade: _onUpgrade,
+            );
+          } catch (e2) {
+            developer.log('Failed to recreate database: $e2');
+            rethrow;
+          }
+        }
+      }
+    } catch (e, stackTrace) {
+      developer.log('Fatal error initializing database: $e', error: e, stackTrace: stackTrace);
+      rethrow;
     }
   }
 
@@ -68,21 +127,18 @@ class DatabaseHelper {
     }
   }
 
-Future<int> insertPayment(Payment payment) async {
+Future<int> insertPayment(Payment payment, {int budgetDay = 1}) async {
   final db = await database;
   final now = DateTime.now();
   final currentDay = now.day;
-  final isDueToday = payment.day == currentDay;
+  final daysInMonth = _daysInMonth(now.year, now.month);
+  final effectivePaymentDay = _effectiveDay(payment.day, daysInMonth);
+  final isDueToday = effectivePaymentDay == currentDay;
   
-  // Determine if payment should be marked as paid
-  bool isPaid;
-  if (isDueToday) {
-    // If it's due today, it should be unpaid
-    isPaid = false;
-  } else {
-    // Otherwise, follow the normal payment cycle logic
-    isPaid = payment.day < currentDay;
-  }
+  // Use cycle-relative logic for paid status
+  final currentCycleDay = _toCycleDay(currentDay, budgetDay, daysInMonth);
+  final paymentCycleDay = _toCycleDay(payment.day, budgetDay, daysInMonth);
+  final isPaid = !isDueToday && paymentCycleDay < currentCycleDay;
 
   final newPayment = payment.copyWith(
     isPaid: isPaid,
@@ -126,7 +182,7 @@ Future<int> insertPayment(Payment payment) async {
   Future<List<Payment>> getUpcomingPayments({required int budgetDay}) async {
     final allPayments = await getAllPayments();
     final now = DateTime.now();
-    final currentDay = now.day;
+    final daysInMonth = _daysInMonth(now.year, now.month);
   
     // First, separate paid and unpaid payments
     final List<Payment> unpaidPayments = [];
@@ -140,20 +196,18 @@ Future<int> insertPayment(Payment payment) async {
       }
     }
   
-    // Sort unpaid payments by day (starting from current day)
+    // Sort unpaid payments by cycle day (budget day = 0)
     unpaidPayments.sort((a, b) {
-      // Calculate days until next occurrence for each payment
-      final aDay = a.day < currentDay ? a.day + 31 : a.day;
-      final bDay = b.day < currentDay ? b.day + 31 : b.day;
-      return aDay.compareTo(bDay);
+      final aCycleDay = _toCycleDay(a.day, budgetDay, daysInMonth);
+      final bCycleDay = _toCycleDay(b.day, budgetDay, daysInMonth);
+      return aCycleDay.compareTo(bCycleDay);
     });
   
-    // Sort paid payments by day (starting from current day)
+    // Sort paid payments by cycle day (budget day = 0)
     paidPayments.sort((a, b) {
-      // Calculate days until next occurrence for each payment
-      final aDay = a.day < currentDay ? a.day + 31 : a.day;
-      final bDay = b.day < currentDay ? b.day + 31 : b.day;
-      return aDay.compareTo(bDay);
+      final aCycleDay = _toCycleDay(a.day, budgetDay, daysInMonth);
+      final bCycleDay = _toCycleDay(b.day, budgetDay, daysInMonth);
+      return aCycleDay.compareTo(bCycleDay);
     });
   
     // Combine unpaid first, then paid
@@ -212,6 +266,32 @@ Future<int> insertPayment(Payment payment) async {
     }
   }
 
+/// Returns the number of days in a given month/year.
+int _daysInMonth(int year, int month) {
+  return DateTime(year, month + 1, 0).day;
+}
+
+/// Clamps a payment day to the last day of the month if it exceeds it.
+/// E.g., day 31 in a 30-day month becomes day 30.
+int _effectiveDay(int paymentDay, int daysInMonth) {
+  return paymentDay > daysInMonth ? daysInMonth : paymentDay;
+}
+
+/// Converts a calendar day to a cycle day (0-indexed from budget day).
+/// Budget day becomes cycle day 0, the day after becomes 1, etc.
+/// Takes into account the actual number of days in the current month.
+int _toCycleDay(int calendarDay, int budgetDay, int daysInMonth) {
+  final effectiveBudgetDay = _effectiveDay(budgetDay, daysInMonth);
+  final effectiveCalendarDay = _effectiveDay(calendarDay, daysInMonth);
+  
+  if (effectiveCalendarDay >= effectiveBudgetDay) {
+    return effectiveCalendarDay - effectiveBudgetDay;
+  } else {
+    // Wrap around using actual days in month
+    return (daysInMonth - effectiveBudgetDay) + effectiveCalendarDay;
+  }
+}
+
 Future<void> resetPaymentsForNewCycle(int budgetDay) async {
   if (kIsWeb) {
     await _resetPaymentsForNewCycleWeb(budgetDay);
@@ -221,25 +301,19 @@ Future<void> resetPaymentsForNewCycle(int budgetDay) async {
     final payments = maps.map((map) => Payment.fromMap(map)).toList();
     final now = DateTime.now();
     final currentDay = now.day;
+    final daysInMonth = _daysInMonth(now.year, now.month);
+    final currentCycleDay = _toCycleDay(currentDay, budgetDay, daysInMonth);
 
     final batch = db.batch();
 
     for (var payment in payments) {
-      bool isPaid;
-      bool isDueToday = payment.day == currentDay;
+      final effectivePaymentDay = _effectiveDay(payment.day, daysInMonth);
+      bool isDueToday = effectivePaymentDay == currentDay;
+      final paymentCycleDay = _toCycleDay(payment.day, budgetDay, daysInMonth);
       
-      // If it's due today, it should be unpaid
-      if (isDueToday) {
-        isPaid = false;
-      }
-      // If current day is after budget day, we're in a new budget cycle
-      else if (currentDay > budgetDay) {
-        isPaid = payment.day <= budgetDay; // Keep paid status for previous cycle
-      } 
-      // Current day is on or before budget day
-      else {
-        isPaid = payment.day < currentDay; // Only mark as paid if before today
-      }
+      // Payment is paid if its cycle day is before today's cycle day
+      // (and it's not due today)
+      bool isPaid = !isDueToday && paymentCycleDay < currentCycleDay;
 
       batch.update(
         'payments',
@@ -281,11 +355,18 @@ Future<void> resetPaymentsForNewCycle(int budgetDay) async {
     final payments = await _getAllPaymentsFromPrefs();
     final now = DateTime.now();
     final currentDay = now.day;
+    final daysInMonth = _daysInMonth(now.year, now.month);
+    final currentCycleDay = _toCycleDay(currentDay, budgetDay, daysInMonth);
 
     for (var i = 0; i < payments.length; i++) {
+      final effectivePaymentDay = _effectiveDay(payments[i].day, daysInMonth);
+      final isDueToday = effectivePaymentDay == currentDay;
+      final paymentCycleDay = _toCycleDay(payments[i].day, budgetDay, daysInMonth);
+      final isPaid = !isDueToday && paymentCycleDay < currentCycleDay;
+      
       payments[i] = payments[i].copyWith(
-        isPaid: false,
-        isDueToday: payments[i].day == currentDay,
+        isPaid: isPaid,
+        isDueToday: isDueToday,
         updatedAt: now,
       );
     }

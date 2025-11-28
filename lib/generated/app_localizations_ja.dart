@@ -42,6 +42,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get biometricErrorAuthFailed => '生体認証に失敗しました。もう一度お試しください。';
 
   @override
+  String get biometricNoAuthError => '生体認証を使用する前に、まずPINを設定してください。';
+
+  @override
   String get pinInvalidLengthError => '4桁のPINを入力してください';
 
   @override

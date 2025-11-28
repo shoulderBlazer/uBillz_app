@@ -40,6 +40,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get biometricErrorAuthFailed => '生物识别认证失败。请再试一次。';
 
   @override
+  String get biometricNoAuthError => '请先设置您的PIN码，然后再使用生物识别。';
+
+  @override
   String get pinInvalidLengthError => '请输入4位数的PIN码';
 
   @override

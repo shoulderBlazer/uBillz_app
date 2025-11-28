@@ -47,6 +47,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'authentification biométrique a échoué. Veuillez réessayer.';
 
   @override
+  String get biometricNoAuthError =>
+      'Veuillez d\'abord configurer votre code PIN avant d\'utiliser la biométrie.';
+
+  @override
   String get pinInvalidLengthError =>
       'Veuillez entrer un code PIN à 4 chiffres';
 

@@ -10,6 +10,7 @@
   "biometricErrorNotAvailable": "Biometrie ist auf diesem Gerät nicht verfügbar.",
   "biometricErrorPasscodeNotSet": "Es ist kein Passcode festgelegt. Bitte legen Sie einen Passcode auf Ihrem Gerät fest, um die Biometrie zu verwenden.",
   "biometricErrorAuthFailed": "Biometrische Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+  "biometricNoAuthError": "Bitte richten Sie zuerst Ihre PIN ein, bevor Sie die Biometrie verwenden.",
   "pinInvalidLengthError": "Bitte geben Sie eine 4-stellige PIN ein",
   "pinInvalidError": "Ungültige PIN. Bitte versuchen Sie es erneut.",
   "authenticationError": "Fehler bei der Authentifizierung: {error}",

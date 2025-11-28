@@ -38,24 +38,40 @@ class AuthProvider with ChangeNotifier {
   }
   String get userName => _userName;
 
+  String? _cachedPin;
+  String? get savedPin => _cachedPin;
+
+
   Future<void> initialize() async {
     _isInitializing = true;
     notifyListeners();
 
+    // Check first launch before loading other auth data
+    final isFirst = await isFirstLaunch();
+    print('🔍 AuthProvider: First launch: $isFirst');
+    
     await _checkAuthSetup();
     await _loadUserName();
+    await _loadSavedPin();
 
     _isInitializing = false;
     notifyListeners();
   }
 
   Future<void> _checkAuthSetup() async {
-    // Check secure storage first (more reliable)
+    // Don't check auth setup on first launch
+    if (await isFirstLaunch()) {
+      _hasSetupAuth = false;
+      print('🔍 First launch - skipping auth setup check');
+      return;
+    }
+
+    // Rest of the existing _checkAuthSetup code...
     final secureSetup = await _secureStorage.read(key: 'auth_setup');
     if (secureSetup != null) {
       _hasSetupAuth = secureSetup == 'true';
     } else {
-      // Fallback to SharedPreferences for backwards compatibility
+      // Fallback to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       _hasSetupAuth = prefs.getBool('auth_setup') ?? false;
       // Migrate to secure storage
@@ -85,6 +101,25 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> isFirstLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    print('🔍 Checking first launch in SharedPreferences');
+    print('🔍 All keys in SharedPreferences: ${prefs.getKeys()}');
+    
+    // Check both the key existence and its value
+    final isFirst = !prefs.containsKey('first_launch') || 
+                  (prefs.get('first_launch') == null) ||
+                  (prefs.get('first_launch') == true);
+    
+    print('🔍 isFirstLaunch: $isFirst');
+    
+    if (isFirst) {
+      print('🔍 Setting first_launch to false');
+      await prefs.setBool('first_launch', false);
+    }
+    
+    return isFirst;
+  }
 
   // Simple encryption for PIN storage (better than plain text)
   String _encryptPin(String pin) {
@@ -162,6 +197,25 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> _loadSavedPin() async {
+    String? encryptedPin = await _secureStorage.read(key: 'user_pin_encrypted');
+
+    if (encryptedPin == null) {
+      final prefs = await SharedPreferences.getInstance();
+      encryptedPin = prefs.getString('user_pin_encrypted');
+    }
+
+    if (encryptedPin != null) {
+      try {
+        _cachedPin = _decryptPin(encryptedPin);
+      } catch (_) {
+        _cachedPin = null;
+      }
+    } else {
+      _cachedPin = null;
+    }
+  }
+
   Future<bool> authenticateWithPin(String pin) async {
     try {
       // Try secure storage first
@@ -176,6 +230,7 @@ class AuthProvider with ChangeNotifier {
       if (encryptedPin != null) {
         final storedPin = _decryptPin(encryptedPin);
         if (storedPin == pin) {
+          _cachedPin = storedPin; // 👈 save for biometrics
           _isAuthenticated = true;
           _isFromBackground = false;
           _justAuthenticated = true;
@@ -183,6 +238,7 @@ class AuthProvider with ChangeNotifier {
           return true;
         }
       }
+      
       return false;
     } catch (e) {
       return false;
@@ -237,6 +293,7 @@ class AuthProvider with ChangeNotifier {
   Future<bool> authenticateWithBiometrics() async {
     try {
       if (_isBiometricAuthInProgress) {
+        print('🔐 AuthProvider: Biometric auth already in progress');
         return false;
       }
       
@@ -244,6 +301,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       
       final isBiometricEnabled = await isBiometricsEnabled();
+      print('🔐 AuthProvider: isBiometricEnabled=$isBiometricEnabled');
       
       if (!isBiometricEnabled) {
         _isBiometricAuthInProgress = false;
@@ -252,15 +310,29 @@ class AuthProvider with ChangeNotifier {
       }
       
       // Check if biometrics are available
-      if (!await isBiometricsAvailable()) {
+      final isAvailable = await isBiometricsAvailable();
+      print('🔐 AuthProvider: isBiometricsAvailable=$isAvailable');
+      
+      if (!isAvailable) {
         _isBiometricAuthInProgress = false;
         notifyListeners();
         return false;
       }
       
       // Check if any biometrics are enrolled
-      final availableBiometrics = await _localAuth.getAvailableBiometrics();
+      List<BiometricType> availableBiometrics = [];
+      try {
+        availableBiometrics = await _localAuth.getAvailableBiometrics();
+        print('🔐 AuthProvider: availableBiometrics=$availableBiometrics');
+      } catch (e) {
+        print('❌ AuthProvider: Error getting available biometrics: $e');
+        _isBiometricAuthInProgress = false;
+        notifyListeners();
+        return false;
+      }
+      
       if (availableBiometrics.isEmpty) {
+        print('🔐 AuthProvider: No biometrics enrolled');
         _isBiometricAuthInProgress = false;
         notifyListeners();
         return false;
@@ -269,15 +341,19 @@ class AuthProvider with ChangeNotifier {
       // Add small delay to ensure Face ID system is ready
       await Future.delayed(const Duration(milliseconds: 200));
       
+      print('🔐 AuthProvider: Calling _localAuth.authenticate...');
+      
       // Authenticate with biometrics
       final authenticated = await _localAuth.authenticate(
         localizedReason: 'Authenticate to access uBillz',
         options: const AuthenticationOptions(
           stickyAuth: false,
           biometricOnly: true,
-          useErrorDialogs: false,
+          useErrorDialogs: true, // Let the system show error dialogs
         ),
       );
+      
+      print('🔐 AuthProvider: authenticate result=$authenticated');
       
       _isBiometricAuthInProgress = false;
       notifyListeners();
@@ -293,11 +369,13 @@ class AuthProvider with ChangeNotifier {
       return false;
       
     } on PlatformException catch (e) {
+      print('❌ AuthProvider: PlatformException in authenticateWithBiometrics: ${e.code} - ${e.message}');
       _isBiometricAuthInProgress = false;
       notifyListeners();
-      // Re-throw the exception to be handled by the UI layer
-      throw e;
-    } catch (e) {
+      rethrow; // Use rethrow to preserve stack trace
+    } catch (e, stackTrace) {
+      print('❌ AuthProvider: Error in authenticateWithBiometrics: $e');
+      print('❌ AuthProvider: Stack trace: $stackTrace');
       _isBiometricAuthInProgress = false;
       notifyListeners();
       return false;
@@ -334,33 +412,28 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      // Set the flag to indicate we're logging out
       _justLoggedOut = true;
-      
-      // Clear authentication state
       _isAuthenticated = false;
       _isFromBackground = false;
-      
-      // Stop any pending biometric authentication
+      _cachedPin = null; // 👈 CLEAR PIN FOR SECURITY
+
       try {
         await _localAuth.stopAuthentication();
-      } catch (e) {
-        // Ignore errors when stopping auth
-      }
-      
-      // Notify listeners of the state change
+      } catch (_) {}
+
       notifyListeners();
-    } catch (e) {
-      // Ensure we still update the state even if there's an error
+    } catch (_) {
       _isAuthenticated = false;
       _justLoggedOut = true;
       _isFromBackground = false;
+      _cachedPin = null;
       notifyListeners();
     }
   }
   
-  void resetJustLoggedOut() {
+  Future<void> resetJustLoggedOut() async {
     _justLoggedOut = false;
+    notifyListeners();
   }
 
   Future<void> resetAuth() async {
@@ -381,6 +454,7 @@ class AuthProvider with ChangeNotifier {
     _hasSetupAuth = false;
     _userName = '';
     _isFromBackground = false;
+    _cachedPin = null;
     notifyListeners();
   }
 

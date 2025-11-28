@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
 import '../providers/payment_provider.dart';
 import 'auth/setup_screen.dart';
@@ -18,95 +17,115 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _isInitialized = false;
+  bool _hasNavigated = false;
+
   @override
   void initState() {
     super.initState();
-    // Trigger initialization after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // We don't need to await this here. The UI will react to provider changes.
-      Provider.of<AuthProvider>(context, listen: false).initialize();
-      Provider.of<PaymentProvider>(context, listen: false).loadPayments();
-    });
+    Future.microtask(_initializeApp);
   }
 
-  void _navigate(BuildContext context, AuthProvider authProvider) {
-    // This function will be called only when the provider is no longer initializing.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+  Future<void> _initializeApp() async {
+    if (!mounted || _hasNavigated) return;
 
-      final userName = authProvider.userName;
-      print('🔍 SplashScreen: userName from provider = "$userName"');
+    final authProvider = context.read<AuthProvider>();
 
-      if (userName.isEmpty || userName == 'User') {
-        print('➡️ Navigating to SetupScreen (first time)');
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const SetupScreen()),
-        );
-      } else {
-        print('➡️ Navigating to LoginScreen (returning user: $userName)');
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
+    // ❗ Check first launch BEFORE initialization to prevent value change later
+    final isFirst = await authProvider.isFirstLaunch();
+
+    final paymentProvider = context.read<PaymentProvider>();
+    await paymentProvider.loadPayments();
+
+    // If the user is first-time → just navigate, do NOT initialize auth yet
+    if (isFirst) {
+      if (mounted) {
+        setState(() => _isInitialized = true);
+        _navigateBasedOnAuth(isFirstCached: true);
       }
-    });
+      return;
+    }
+
+    // Initialize only for existing users
+    await authProvider.initialize();
+
+    if (!mounted) return;
+
+    setState(() => _isInitialized = true);
+    _navigateBasedOnAuth(isFirstCached: false);
+  }
+
+  Future<void> _navigateBasedOnAuth({required bool isFirstCached}) async {
+    if (!mounted || _hasNavigated) return;
+    _hasNavigated = true;
+
+    final authProvider = context.read<AuthProvider>();
+
+    final isFirst = isFirstCached;
+    final hasSetup = authProvider.hasSetupAuth;
+    final isAuthenticated = authProvider.isAuthenticated;
+
+    Widget targetScreen;
+
+    if (isFirst || !hasSetup) {
+      targetScreen = const SetupScreen();
+    } else if (isAuthenticated) {
+      targetScreen = const DashboardScreen();
+    } else {
+      targetScreen = const LoginScreen();
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => targetScreen),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final sizer = ResponsiveSizer(context);
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        // While the auth provider is loading data, show the splash screen UI.
-        // Once it's done, navigate.
-        if (!authProvider.isInitializing) {
-          _navigate(context, authProvider);
-        }
-
-        // This UI is shown during initialization
-        return Material(
-          color: const Color(0xFF0097A7),
-          child: Stack(
+    return Material(
+      color: const Color(0xFF0097A7),
+      child: Stack(
         children: [
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/ubillz_logo_512x512_white.png',
-                    height: sizer.sp(100),
-                    width: sizer.sp(100),
-                    fit: BoxFit.contain,
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/ubillz_logo_512x512_white.png',
+                  height: sizer.sp(100),
+                  width: sizer.sp(100),
+                  fit: BoxFit.contain,
+                ),
+                SizedBox(height: sizer.sp(24)),
+                Text(
+                  'uBillz',
+                  style: TextStyle(
+                    fontSize: sizer.sp(48),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  SizedBox(height: sizer.sp(24)),
-                  Text(
-                    'uBillz',
-                    style: TextStyle(
-                      fontSize: sizer.sp(48),
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                ),
+                SizedBox(height: sizer.sp(8)),
+                Text(
+                  'Your Budget, Simplified',
+                  style: TextStyle(
+                    fontSize: sizer.sp(16),
+                    color: Colors.white70,
                   ),
-                  SizedBox(height: sizer.sp(8)),
-                  Text(
-                    'Your Budget, Simplified',
-                    style: TextStyle(
-                      fontSize: sizer.sp(16),
-                      color: Colors.white70,
-                    ),
-                  ),
+                ),
+                if (!_isInitialized) ...[
                   SizedBox(height: sizer.sp(48)),
                   CircularProgressIndicator(
                     color: Colors.white,
                     strokeWidth: sizer.sp(3),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
-          Positioned(
+                    Positioned(
             bottom: 16,
             right: 16,
             child: FloatingActionButton(
@@ -114,7 +133,9 @@ class _SplashScreenState extends State<SplashScreen> {
               backgroundColor: Colors.white.withOpacity(0.2),
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const DebugStorageScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const DebugStorageScreen(),
+                  ),
                 );
               },
               child: const Icon(Icons.bug_report, color: Colors.white),
@@ -122,8 +143,6 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
         ],
       ),
-    );
-      },
     );
   }
 }

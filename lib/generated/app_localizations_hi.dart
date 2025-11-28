@@ -48,6 +48,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'बायोमेट्रिक प्रमाणीकरण विफल रहा। कृपया पुनः प्रयास करें।';
 
   @override
+  String get biometricNoAuthError =>
+      'बायोमेट्रिक्स का उपयोग करने से पहले कृपया पहले अपना पिन सेट करें।';
+
+  @override
   String get pinInvalidLengthError => 'कृपया 4 अंकों का पिन दर्ज करें';
 
   @override

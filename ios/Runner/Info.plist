@@ -49,5 +49,7 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>NSFaceIDUsageDescription</key>
+		<string>uBillz uses Face ID to securely authenticate you and protect your financial data.</string>
 	</dict>
 </plist>

@@ -46,6 +46,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'فشلت المصادقة بالبصمة. يرجى المحاولة مرة أخرى.';
 
   @override
+  String get biometricNoAuthError =>
+      'يرجى إعداد رمز PIN الخاص بك أولاً قبل استخدام البصمة.';
+
+  @override
   String get pinInvalidLengthError => 'الرجاء إدخال رمز PIN مكون من 4 أرقام';
 
   @override

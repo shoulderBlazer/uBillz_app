@@ -10,6 +10,7 @@
   "biometricErrorNotAvailable": "此设备上无法使用生物识别。",
   "biometricErrorPasscodeNotSet": "未设置密码。请在您的设备上设置密码以使用生物识别。",
   "biometricErrorAuthFailed": "生物识别认证失败。请再试一次。",
+  "biometricNoAuthError": "请先设置您的PIN码，然后再使用生物识别。",
   "pinInvalidLengthError": "请输入4位数的PIN码",
   "pinInvalidError": "PIN码无效。请再试一次。",
   "authenticationError": "认证过程中出错：{error}",
