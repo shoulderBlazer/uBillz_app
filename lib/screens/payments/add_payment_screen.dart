@@ -155,16 +155,14 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: ClipRect(
+      appBar: AppBar(
+        title: Text(l10n.addPaymentTitle, style: TextStyle(fontSize: sizer.sp(20))),
+        backgroundColor: Colors.black.withOpacity(0.2),
+        elevation: 0,
+        flexibleSpace: ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: sizer.sp(5), sigmaY: sizer.sp(5)),
-            child: AppBar(
-              title: Text(l10n.addPaymentTitle, style: TextStyle(fontSize: sizer.sp(20))),
-              backgroundColor: Colors.black.withOpacity(0.2),
-              elevation: 0,
-            ),
+            child: Container(color: Colors.transparent),
           ),
         ),
       ),

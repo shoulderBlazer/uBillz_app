@@ -91,69 +91,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: ClipRect(
+      appBar: AppBar(
+        backgroundColor: Colors.black.withOpacity(0.2),
+        elevation: 0,
+        flexibleSpace: ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-            child: AppBar(
-              backgroundColor: Colors.black.withOpacity(0.2),
-              elevation: 0,
-              actions: [
-                PopupMenuButton<String>(
-                  color: Colors.transparent,
-                  elevation: 16,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(sizer.sp(12)),
-                  ),
-                  onSelected: (value) async {
-                    if (value == 'logout') {
-                      await Provider.of<AuthProvider>(context, listen: false).logout();
-                      if (!context.mounted) return;
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                        (Route<dynamic> route) => false,
-                      );
-                    } else {
-                      Navigator.pushNamed(context, value);
-                    }
-                  },
-                  itemBuilder: (BuildContext context) {
-                    return [
-                      PopupMenuItem(
-                        value: '/settings/payday',
-                        padding: EdgeInsets.zero,
-                        child: _buildMenuItem(l10n.payday, sizer),
-                      ),
-                      PopupMenuItem(
-                        value: '/settings/currency',
-                        padding: EdgeInsets.zero,
-                        child: _buildMenuItem(l10n.currencySettings, sizer),
-                      ),
-                      PopupMenuItem(
-                        value: '/settings/language',
-                        padding: EdgeInsets.zero,
-                        child: _buildMenuItem(l10n.languageSettings, sizer),
-                      ),
-                      PopupMenuItem(
-                        value: '/settings/username',
-                        padding: EdgeInsets.zero,
-                        child: _buildMenuItem(l10n.usernameSettings, sizer),
-                      ),
-                      PopupMenuItem(
-                        value: 'logout',
-                        padding: EdgeInsets.zero,
-                        child: _buildMenuItem(l10n.logout, sizer),
-                      ),
-                    ];
-                  },
-                  icon: Icon(Icons.settings, size: sizer.sp(24), color: Colors.white),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ),
+            child: Container(color: Colors.transparent),
           ),
         ),
+        actions: [
+          PopupMenuButton<String>(
+            color: Colors.transparent,
+            elevation: 16,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(sizer.sp(12)),
+            ),
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await Provider.of<AuthProvider>(context, listen: false).logout();
+                if (!context.mounted) return;
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                  (Route<dynamic> route) => false,
+                );
+              } else {
+                Navigator.pushNamed(context, value);
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem(
+                  value: '/settings/payday',
+                  padding: EdgeInsets.zero,
+                  child: _buildMenuItem(l10n.payday, sizer),
+                ),
+                PopupMenuItem(
+                  value: '/settings/currency',
+                  padding: EdgeInsets.zero,
+                  child: _buildMenuItem(l10n.currencySettings, sizer),
+                ),
+                PopupMenuItem(
+                  value: '/settings/language',
+                  padding: EdgeInsets.zero,
+                  child: _buildMenuItem(l10n.languageSettings, sizer),
+                ),
+                PopupMenuItem(
+                  value: '/settings/username',
+                  padding: EdgeInsets.zero,
+                  child: _buildMenuItem(l10n.usernameSettings, sizer),
+                ),
+                PopupMenuItem(
+                  value: 'logout',
+                  padding: EdgeInsets.zero,
+                  child: _buildMenuItem(l10n.logout, sizer),
+                ),
+              ];
+            },
+            icon: Icon(Icons.settings, size: sizer.sp(24), color: Colors.white),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -172,13 +170,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            return ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height,
-              ),
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: sizer.width(8), vertical: sizer.height(16)),
-                child: Column(
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: sizer.width(16), vertical: sizer.height(16)),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top - 45),
@@ -304,7 +298,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               SizedBox(height: sizer.sp(16)),
                               if (paymentProvider.upcomingPayments.isEmpty)
                                 Padding(
-                                  padding: EdgeInsets.symmetric(vertical: sizer.height(32)),
+                                  padding: EdgeInsets.symmetric(vertical: sizer.height(16)),
                                   child: Center(
                                     child: Text(
                                       l10n.noUpcomingPayments,
@@ -332,7 +326,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           ))
                                       .toList(),
                                 ),
-                              SizedBox(height: sizer.height(67)),
+                              SizedBox(height: sizer.height(50)),
                             ],
                           ),
                         ),
@@ -389,8 +383,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-            ),
-          );
+            );
           },
         ),
       ),

@@ -125,14 +125,18 @@ if (success) {
             child: SafeArea(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(sizer.sp(24)),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - sizer.height(48)),
-                  child: IntrinsicHeight(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: sizer.maxContentWidth,
+                      minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - sizer.height(48),
+                    ),
+                    child: IntrinsicHeight(
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
                           Image.asset('assets/images/ubillz_logo_512x512_white.png', width: sizer.sp(120), height: sizer.sp(120), fit: BoxFit.contain),
                           SizedBox(height: sizer.sp(8)),
                           Text(l10n.welcomeTo, style: TextStyle(fontSize: sizer.sp(32), fontWeight: FontWeight.bold, color: Colors.white)),
@@ -219,7 +223,8 @@ if (success) {
                           
                           SizedBox(height: sizer.sp(24)),
                           Text(l10n.dataStoredLocally, style: TextStyle(fontSize: sizer.sp(12), color: Colors.white60), textAlign: TextAlign.center),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
