@@ -219,14 +219,19 @@ class _LoginScreenState extends State<LoginScreen> {
     final sizer = ResponsiveSizer(context);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppTheme.primaryTeal, AppTheme.secondaryPurple],
-          ),
+      body: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppTheme.primaryTeal, AppTheme.secondaryPurple],
+            ),
+          ),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(sizer.sp(24)),
@@ -359,6 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+        ),
         ),
       ),
     );
