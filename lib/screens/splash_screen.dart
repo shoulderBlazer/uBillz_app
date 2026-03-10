@@ -109,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 SizedBox(height: sizer.sp(8)),
                 Text(
-                  'Your Budget, Simplified',
+                  'Your Bills. Your Budget. Your Control',
                   style: TextStyle(
                     fontSize: sizer.sp(16),
                     color: Colors.white70,
