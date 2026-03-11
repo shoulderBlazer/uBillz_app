@@ -12,6 +12,7 @@ import '../home/dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -35,22 +36,16 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
-    // Always check biometrics availability first
+
     await _checkBiometricsAvailability();
 
     if (authProvider.justLoggedOut) {
       await authProvider.resetJustLoggedOut();
-      if (mounted) {
-        FocusScope.of(context).requestFocus(_pinFocusNode);
-      }
+      if (mounted) FocusScope.of(context).requestFocus(_pinFocusNode);
       return;
     }
 
-    // Only attempt biometric auth if it's available and enabled
-    if (_showBiometrics && mounted) {
-      await _authenticateWithBiometrics();
-    }
+    if (_showBiometrics && mounted) await _authenticateWithBiometrics();
   }
 
   Future<void> _checkBiometricsAvailability() async {
@@ -59,16 +54,13 @@ class _LoginScreenState extends State<LoginScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final isAvailable = await authProvider.isBiometricsAvailable();
       final isEnabled = await authProvider.isBiometricsEnabled();
-      print('🔍 LoginScreen: isAvailable=$isAvailable, isEnabled=$isEnabled');
       if (mounted) {
         setState(() {
           _showBiometrics = isAvailable && isEnabled;
           _biometricsAvailableButNotEnabled = isAvailable && !isEnabled;
         });
-        print('🔍 LoginScreen: _showBiometrics=$_showBiometrics, _biometricsAvailableButNotEnabled=$_biometricsAvailableButNotEnabled');
       }
     } catch (e) {
-      print('❌ LoginScreen: Error checking biometrics - $e');
       if (mounted) {
         setState(() {
           _showBiometrics = false;
@@ -82,9 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_isLoading) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // 🚫 BLOCK BIOMETRICS IF AUTH WAS NEVER SET UP
     if (!authProvider.hasSetupAuth) {
-      debugPrint("🚫 Biometrics blocked: Auth was not set up.");
       _showError(AppLocalizations.of(context)!.biometricNoAuthError);
       setState(() {
         _showBiometrics = false;
@@ -96,14 +86,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (authProvider.isBiometricAuthInProgress) return;
 
     try {
-      if (mounted) {
-        setState(() => _isLoading = true);
-      }
-      
+      if (mounted) setState(() => _isLoading = true);
+
       final authenticated = await authProvider.authenticateWithBiometrics();
-      
       if (!mounted) return;
-      
+
       if (authenticated) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -116,18 +103,17 @@ class _LoginScreenState extends State<LoginScreen> {
         FocusScope.of(context).requestFocus(_pinFocusNode);
       }
     } on PlatformException catch (e) {
-      debugPrint('🔐 Biometric PlatformException: ${e.code} - ${e.message}');
       if (mounted) {
         setState(() => _isLoading = false);
-        _showError(authProvider.getBiometricErrorMessage(e, AppLocalizations.of(context)!));
+        _showError(authProvider.getBiometricErrorMessage(
+            e, AppLocalizations.of(context)!));
         FocusScope.of(context).requestFocus(_pinFocusNode);
       }
-    } catch (e, stackTrace) {
-      debugPrint('🔐 Biometric error: $e');
-      debugPrint('🔐 Stack trace: $stackTrace');
+    } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        _showError(AppLocalizations.of(context)!.authenticationError(e.toString()));
+        _showError(AppLocalizations.of(context)!
+            .authenticationError(e.toString()));
         FocusScope.of(context).requestFocus(_pinFocusNode);
       }
     }
@@ -137,14 +123,17 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_isLoading || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final enable = await showStyledDialog(
-      context: context,
-      title: l10n.enableBiometricLoginTitle,
-      content: l10n.enableBiometricLoginContent,
-    ) ?? false;
+          context: context,
+          title: l10n.enableBiometricLoginTitle,
+          content: l10n.enableBiometricLoginContent,
+        ) ??
+        false;
     if (!enable || !mounted) return;
+
     setState(() => _isLoading = true);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.enableBiometrics();
+
     if (success && mounted) {
       setState(() {
         _showBiometrics = true;
@@ -161,9 +150,8 @@ class _LoginScreenState extends State<LoginScreen> {
     } else if (mounted) {
       _showError(l10n.biometricsEnableError);
     }
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _authenticateWithPin() async {
@@ -173,10 +161,12 @@ class _LoginScreenState extends State<LoginScreen> {
       _showError(l10n.pinInvalidLengthError);
       return;
     }
+
     setState(() => _isLoading = true);
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final success = await authProvider.authenticateWithPin(_pinController.text);
+
       if (success && mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -186,13 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
         _pinController.clear();
       }
     } catch (e) {
-      if (mounted) {
-        _showError(l10n.authenticationError(e.toString()));
-      }
+      if (mounted) _showError(l10n.authenticationError(e.toString()));
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -218,6 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final sizer = ResponsiveSizer(context);
     final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       extendBody: true,
       extendBodyBehindAppBar: true,
@@ -234,138 +221,148 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           bottom: false,
           child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: EdgeInsets.all(sizer.sp(24)),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight - sizer.sp(48),
-                    maxWidth: sizer.maxContentWidth,
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/images/ubillz_logo_512x512_white.png',
-                          height: sizer.sp(100),
-                          width: sizer.sp(100),
-                          fit: BoxFit.contain,
+            builder: (context, constraints) => SingleChildScrollView(
+              padding: EdgeInsets.all(sizer.sp(24)),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - sizer.sp(48),
+                  maxWidth: sizer.maxContentWidth,
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/images/ubillz_logo_512x512_white.png',
+                        height: sizer.sp(100),
+                        width: sizer.sp(100),
+                        fit: BoxFit.contain,
+                      ),
+                      SizedBox(height: sizer.sp(24)),
+                      Text(
+                        l10n.welcomeBack,
+                        style: TextStyle(
+                          fontSize: sizer.sp(32),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        SizedBox(height: sizer.sp(24)),
-                        Text(
-                          l10n.welcomeBack,
-                          style: TextStyle(
-                            fontSize: sizer.sp(32),
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: sizer.sp(8)),
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, child) {
-                        return Text(
+                      ),
+                      SizedBox(height: sizer.sp(8)),
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, child) => Text(
                           l10n.helloUser(authProvider.userName),
                           style: TextStyle(
                             fontSize: sizer.sp(16),
                             color: Colors.white70,
                           ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: sizer.sp(48)),
-                    TextField(
-                      controller: _pinController,
-                      focusNode: _pinFocusNode,
-                      decoration: InputDecoration(
-                        labelText: _showBiometrics ? l10n.pinOrBiometricsPrompt : l10n.pinPrompt,
-                        labelStyle: TextStyle(color: Colors.white70, fontSize: sizer.sp(16)),
-                        floatingLabelStyle: TextStyle(color: Colors.white, fontSize: sizer.sp(16)),
-                        prefixIcon: Icon(Icons.lock, color: Colors.white70, size: sizer.sp(24)),
-                        suffixIcon: _showBiometrics
-                            ? IconButton(
-                                icon: Icon(Icons.fingerprint, color: Colors.white70, size: sizer.sp(28)),
-                                onPressed: _isLoading ? null : _authenticateWithBiometrics,
-                                tooltip: l10n.biometricAuthTooltip,
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.15),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(sizer.sp(12)),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(sizer.sp(12)),
-                          borderSide: BorderSide(color: Colors.white, width: sizer.sp(1.5)),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: sizer.width(16),
-                          vertical: sizer.height(16),
                         ),
                       ),
-                      style: TextStyle(color: Colors.white, fontSize: sizer.sp(16), letterSpacing: sizer.sp(4)),
-                      cursorColor: Colors.white,
-                      obscureText: true,
-                      keyboardType: TextInputType.number,
-                      maxLength: 4,
-                      textAlign: TextAlign.left,
-                      onSubmitted: (_) => _authenticateWithPin(),
-                      onChanged: (value) {
-                        if (value.length == 4) {
-                          _authenticateWithPin();
-                        }
-                      },
-                    ),
-                    SizedBox(height: sizer.sp(24)),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _authenticateWithPin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryTeal,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: sizer.height(16)),
-                          shape: RoundedRectangleBorder(
+                      SizedBox(height: sizer.sp(48)),
+                      TextField(
+                        controller: _pinController,
+                        focusNode: _pinFocusNode,
+                        decoration: InputDecoration(
+                          labelText: _showBiometrics
+                              ? l10n.pinOrBiometricsPrompt
+                              : l10n.pinPrompt,
+                          labelStyle: TextStyle(
+                              color: Colors.white70, fontSize: sizer.sp(16)),
+                          floatingLabelStyle: TextStyle(
+                              color: Colors.white, fontSize: sizer.sp(16)),
+                          prefixIcon:
+                              Icon(Icons.lock, color: Colors.white70, size: sizer.sp(24)),
+                          suffixIcon: _showBiometrics
+                              ? IconButton(
+                                  icon: Icon(Icons.fingerprint,
+                                      color: Colors.white70, size: sizer.sp(28)),
+                                  onPressed:
+                                      _isLoading ? null : _authenticateWithBiometrics,
+                                  tooltip: l10n.biometricAuthTooltip,
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.15),
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(sizer.sp(12)),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(sizer.sp(12)),
+                            borderSide:
+                                BorderSide(color: Colors.white, width: sizer.sp(1.5)),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: sizer.width(16),
+                            vertical: sizer.height(16),
                           ),
                         ),
-                        child: _isLoading
-                            ? SizedBox(
-                                width: sizer.sp(24),
-                                height: sizer.sp(24),
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: sizer.sp(2)),
-                              )
-                            : Text(
-                                l10n.login,
-                                style: TextStyle(fontSize: sizer.sp(16), fontWeight: FontWeight.w600),
-                              ),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: sizer.sp(16),
+                            letterSpacing: sizer.sp(4)),
+                        cursorColor: Colors.white,
+                        obscureText: true,
+                        keyboardType: TextInputType.number,
+                        maxLength: 4,
+                        textAlign: TextAlign.left,
+                        onSubmitted: (_) => _authenticateWithPin(),
+                        onChanged: (value) {
+                          if (value.length == 4) _authenticateWithPin();
+                        },
                       ),
-                    ),
-                    if (_biometricsAvailableButNotEnabled)
-                      Padding(
-                        padding: EdgeInsets.only(top: sizer.sp(16)),
-                        child: TextButton(
-                          onPressed: _isLoading ? null : _enableAndAuthenticateWithBiometrics,
-                          child: Text(
-                            l10n.enableBiometrics,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: sizer.sp(14),
-                              fontWeight: FontWeight.w600,
+                      SizedBox(height: sizer.sp(24)),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _authenticateWithPin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryTeal,
+                            foregroundColor: Colors.white,
+                            padding:
+                                EdgeInsets.symmetric(vertical: sizer.height(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(sizer.sp(12)),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? SizedBox(
+                                  width: sizer.sp(24),
+                                  height: sizer.sp(24),
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: sizer.sp(2)),
+                                )
+                              : Text(
+                                  l10n.login,
+                                  style: TextStyle(
+                                      fontSize: sizer.sp(16),
+                                      fontWeight: FontWeight.w600),
+                                ),
+                        ),
+                      ),
+                      if (_biometricsAvailableButNotEnabled)
+                        Padding(
+                          padding: EdgeInsets.only(top: sizer.sp(16)),
+                          child: TextButton(
+                            onPressed: _isLoading
+                                ? null
+                                : _enableAndAuthenticateWithBiometrics,
+                            child: Text(
+                              l10n.enableBiometrics,
+                              style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: sizer.sp(14),
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          );
-            },
           ),
-        ),
         ),
       ),
     );
