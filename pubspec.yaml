@@ -1,7 +1,11 @@
 name: ubillz
-description: uBillz payment tracking app
+description: A simple private bill tracker to manage monthly bills, plan around payday, and stay on budget.
 publish_to: 'none'
+<<<<<<< HEAD
 version: 1.0.1+11
+=======
+version: 1.0.1+12
+>>>>>>> ff8fb1d (Splash screen and pubspec Branding update. +1 on build number)
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

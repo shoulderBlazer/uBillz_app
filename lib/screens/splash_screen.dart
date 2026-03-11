@@ -109,7 +109,11 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 SizedBox(height: sizer.sp(8)),
                 Text(
+<<<<<<< HEAD
                   'Your Bills. Your Budget. Your Control.',
+=======
+                  'Your Bills. Your Budget. Your Control',
+>>>>>>> ff8fb1d (Splash screen and pubspec Branding update. +1 on build number)
                   style: TextStyle(
                     fontSize: sizer.sp(16),
                     color: Colors.white70,
