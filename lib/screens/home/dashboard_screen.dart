@@ -102,11 +102,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         actions: [
           PopupMenuButton<String>(
-            color: Colors.transparent,
-            elevation: 16,
+            color: AppTheme.primaryTeal,
+            elevation: 8,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(sizer.sp(12)),
             ),
+            position: PopupMenuPosition.under,
             onSelected: (value) async {
               if (value == 'logout') {
                 await Provider.of<AuthProvider>(context, listen: false).logout();
@@ -391,22 +392,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMenuItem(String title, ResponsiveSizer sizer) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryTeal.withOpacity(0.9),
-            AppTheme.secondaryPurple.withOpacity(0.9),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: sizer.sp(16), vertical: sizer.sp(12)),
-        child: Text(title, style: const TextStyle(color: Colors.white)),
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: sizer.sp(16), vertical: sizer.sp(12)),
+      child: Text(title, style: const TextStyle(color: Colors.white)),
     );
   }
 }

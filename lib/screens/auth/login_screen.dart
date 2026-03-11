@@ -219,50 +219,50 @@ class _LoginScreenState extends State<LoginScreen> {
     final sizer = ResponsiveSizer(context);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      body: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppTheme.primaryTeal, AppTheme.secondaryPurple],
-            ),
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppTheme.primaryTeal, AppTheme.secondaryPurple],
           ),
+        ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(sizer.sp(24)),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: sizer.maxContentWidth,
-                  minHeight: MediaQuery.of(context).size.height -
-                      MediaQuery.of(context).padding.top -
-                      MediaQuery.of(context).padding.bottom - sizer.height(48),
-                ),
-                child: IntrinsicHeight(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                    Image.asset(
-                      'assets/images/ubillz_logo_512x512_white.png',
-                      height: sizer.sp(100),
-                      width: sizer.sp(100),
-                      fit: BoxFit.contain,
-                    ),
-                    SizedBox(height: sizer.sp(24)),
-                    Text(
-                      l10n.welcomeBack,
-                      style: TextStyle(
-                        fontSize: sizer.sp(32),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: sizer.sp(8)),
+          bottom: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: EdgeInsets.all(sizer.sp(24)),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight - sizer.sp(48),
+                    maxWidth: sizer.maxContentWidth,
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/ubillz_logo_512x512_white.png',
+                          height: sizer.sp(100),
+                          width: sizer.sp(100),
+                          fit: BoxFit.contain,
+                        ),
+                        SizedBox(height: sizer.sp(24)),
+                        Text(
+                          l10n.welcomeBack,
+                          style: TextStyle(
+                            fontSize: sizer.sp(32),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: sizer.sp(8)),
                     Consumer<AuthProvider>(
                       builder: (context, authProvider, child) {
                         return Text(
@@ -293,11 +293,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.15),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(sizer.sp(8)),
+                          borderRadius: BorderRadius.circular(sizer.sp(12)),
                           borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(sizer.sp(8)),
+                          borderRadius: BorderRadius.circular(sizer.sp(12)),
                           borderSide: BorderSide(color: Colors.white, width: sizer.sp(1.5)),
                         ),
                         contentPadding: EdgeInsets.symmetric(
@@ -357,14 +357,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ),
             ),
+          );
+            },
           ),
-        ),
         ),
       ),
     );
